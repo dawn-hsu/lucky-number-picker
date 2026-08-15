@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f2e9">
+  <title>好運選號｜台灣彩券隨機選號工具</title>
+  <style>
+    :root {
+      --ink: #2f2926;
+      --muted: #7d746e;
+      --night: #f7f2e9;
+      --panel: #fffdf9;
+      --panel-soft: #f5eee5;
+      --line: rgba(76, 59, 48, .13);
+      --wine: #a63d52;
+      --wine-bright: #c9586d;
+      --pine: #4d7569;
+      --gold: #a67d3e;
+      --shadow: 0 22px 60px rgba(83, 60, 44, .11);
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { color-scheme: light; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 87% 12%, rgba(198, 113, 128, .18), transparent 25rem),
+        radial-gradient(circle at 12% 80%, rgba(93, 139, 125, .13), transparent 31rem),
+        var(--night);
+    }
+
+    button { font: inherit; }
+    button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+    [hidden] { display: none !important; }
+
+    .shell { width: min(1160px, calc(100% - 36px)); margin: 0 auto; }
+    .topbar {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .mark {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      border: 1px solid rgba(166, 125, 62, .65);
+      border-radius: 50% 50% 48% 52%;
+      transform: rotate(-12deg);
+    }
+    .mark::before, .mark::after {
+      content: "";
+      position: absolute;
+      inset: 7px 12px 7px 6px;
+      border: 1px solid var(--wine);
+      border-radius: 65% 35% 55% 45%;
+      transform: rotate(36deg);
+    }
+    .mark::after { inset: 9px 5px 5px 13px; transform: rotate(-28deg); }
+    .brand strong { display: block; letter-spacing: .14em; font-size: 15px; }
+    .brand small { color: var(--muted); letter-spacing: .12em; font-size: 9px; }
+    .age-note { color: var(--muted); font-size: 12px; }
+
+    .hero {
+      position: relative;
+      padding: 70px 0 48px;
+      overflow: hidden;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--wine);
+      font-size: 12px;
+      letter-spacing: .2em;
+    }
+    .eyebrow::before { content: ""; width: 32px; height: 1px; background: var(--wine); }
+    h1 {
+      margin: 20px 0 16px;
+      max-width: 740px;
+      font-family: "Noto Serif TC", "PMingLiU", serif;
+      font-weight: 500;
+      font-size: clamp(40px, 6vw, 74px);
+      line-height: 1.08;
+      letter-spacing: .025em;
+    }
+    .hero p { margin: 0; max-width: 540px; color: var(--muted); line-height: 1.8; font-size: 15px; }
+    .hero-orbit {
+      position: absolute;
+      right: 4%;
+      top: 18px;
+      width: 250px;
+      height: 250px;
+      border: 1px solid rgba(166, 125, 62, .2);
+      border-radius: 46% 54% 58% 42%;
+      transform: rotate(18deg);
+      pointer-events: none;
+    }
+    .hero-orbit::before, .hero-orbit::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+    }
+    .hero-orbit::before { inset: 44px; border: 1px solid rgba(166, 61, 82, .2); }
+    .hero-orbit::after { width: 12px; height: 12px; background: var(--wine); top: 24px; left: 53px; box-shadow: 132px 166px 0 var(--pine); }
+
+    .game-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 6px;
+      margin-bottom: 18px;
+      width: fit-content;
+      background: rgba(255, 253, 249, .72);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+    }
+    .tab {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 20px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .tab:hover { color: var(--ink); }
+    .tab[aria-selected="true"] { color: white; background: var(--wine); box-shadow: 0 8px 28px rgba(143, 38, 56, .32); }
+
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 18px; align-items: start; }
+    .card {
+      background: linear-gradient(150deg, rgba(255,255,255,.72), transparent 48%), var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+    .main-card { padding: clamp(22px, 4vw, 38px); min-height: 430px; }
+    .card-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 30px; }
+    .card-head h2 { margin: 0 0 7px; font-family: "Noto Serif TC", serif; font-size: 25px; font-weight: 500; }
+    .card-head p { margin: 0; color: var(--muted); font-size: 13px; }
+    .secure { display: flex; align-items: center; gap: 7px; color: #52786c; font-size: 11px; white-space: nowrap; }
+    .secure-dot { width: 7px; height: 7px; border-radius: 50%; background: #5f8c7e; box-shadow: 0 0 0 5px rgba(95,140,126,.11); }
+
+    .results { display: grid; gap: 12px; }
+    .pick {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 14px 15px 18px;
+      border: 1px solid rgba(76,59,48,.1);
+      border-radius: 17px;
+      background: #fbf8f2;
+      animation: rise .32s ease both;
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+    .pick-index { color: var(--muted); font-size: 11px; letter-spacing: .12em; }
+    .balls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .ball {
+      width: 39px;
+      height: 39px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #fffdf9;
+      color: #18201e;
+      font-weight: 750;
+      font-size: 14px;
+      border: 1px solid rgba(76,59,48,.12);
+      box-shadow: inset 0 -2px 0 rgba(66,48,37,.08), 0 5px 12px rgba(84,59,43,.1);
+    }
+    .divider { width: 1px; height: 28px; margin: 0 4px; background: var(--line); }
+    .ball.extra { background: var(--wine); color: white; }
+    .pick-actions { display: flex; gap: 4px; }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 11px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      font-size: 17px;
+    }
+    .icon-btn:hover { color: var(--ink); background: rgba(76,59,48,.06); }
+    .icon-btn.saved { color: var(--gold); }
+
+    .generate-row { display: flex; align-items: center; gap: 16px; margin-top: 24px; }
+    .generate {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      min-height: 54px;
+      border: 0;
+      border-radius: 15px;
+      color: white;
+      background: linear-gradient(120deg, #74202f, var(--wine-bright));
+      font-weight: 700;
+      letter-spacing: .12em;
+      cursor: pointer;
+      box-shadow: 0 14px 32px rgba(143,38,56,.25);
+    }
+    .generate::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 25%, rgba(255,255,255,.16), transparent 70%); transform: translateX(-100%); }
+    .generate:hover::after { transform: translateX(100%); transition: transform .7s ease; }
+    .generate:active { transform: translateY(1px); }
+    .count-note { min-width: 95px; color: var(--muted); font-size: 12px; text-align: right; }
+
+    .side { display: grid; gap: 14px; }
+    .setting-card { padding: 23px; }
+    .setting-card h3, .saved-card h3 { margin: 0 0 20px; font-size: 14px; letter-spacing: .12em; font-weight: 650; }
+    .setting { padding: 16px 0; border-top: 1px solid var(--line); }
+    .setting:first-of-type { padding-top: 0; border-top: 0; }
+    .setting-label { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; margin-bottom: 11px; }
+    .stepper { display: grid; grid-template-columns: 40px 1fr 40px; height: 42px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .stepper button { border: 0; color: var(--muted); background: rgba(76,59,48,.025); cursor: pointer; font-size: 19px; }
+    .stepper button:hover { color: var(--ink); background: rgba(76,59,48,.06); }
+    .stepper output { display: grid; place-items: center; font-weight: 700; }
+    .preference-btn {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 13px 14px;
+      color: var(--ink);
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .preference-btn span:last-child { color: var(--gold); font-size: 12px; }
+    .tip { margin: 15px 0 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
+
+    .saved-card { padding: 23px; }
+    .saved-empty { padding: 14px 0 4px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    #saved-list { display: grid; gap: 10px; }
+    .saved-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 32px;
+      align-items: start;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbf8f2;
+    }
+    .saved-game { color: var(--muted); font-size: 11px; letter-spacing: .08em; }
+    .saved-mini { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+    .saved-mini b {
+      width: 27px;
+      height: 27px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(76,59,48,.13);
+      border-radius: 50%;
+      color: var(--ink);
+      background: #fffdf9;
+      font-size: 10px;
+      box-shadow: 0 3px 8px rgba(84,59,43,.08);
+    }
+    .saved-mini b.extra { color: white; background: var(--wine); border-color: var(--wine); }
+    .saved-divider { color: var(--muted); font-size: 11px; margin: 0 1px; }
+    .saved-item .icon-btn { width: 32px; height: 32px; }
+
+    footer { display: flex; justify-content: space-between; gap: 20px; padding: 32px 0 46px; color: #78827e; font-size: 11px; line-height: 1.7; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(55,45,39,.34);
+      backdrop-filter: blur(10px);
+    }
+    .modal { width: min(560px, 100%); max-height: min(720px, 90vh); overflow: auto; padding: 28px; background: #fffdf9; border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); }
+    .modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+    .modal h3 { margin: 0 0 7px; font-family: "Noto Serif TC", serif; font-size: 24px; font-weight: 500; }
+    .modal p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .number-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin: 24px 0; }
+    .choice-number { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); background: #faf5ee; cursor: pointer; font-size: 12px; }
+    .choice-number[data-state="locked"] { color: white; background: var(--pine); border-color: #5d8d7e; }
+    .choice-number[data-state="excluded"] { color: #ae7a83; background: rgba(143,38,56,.12); border-color: rgba(189,64,85,.38); text-decoration: line-through; }
+    .legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--muted); font-size: 11px; }
+    .legend span { display: flex; align-items: center; gap: 7px; }
+    .legend i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.16); }
+    .legend .lock { background: var(--pine); }
+    .legend .exclude { background: var(--wine); }
+    .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 26px; }
+    .text-btn, .done-btn { min-height: 43px; padding: 0 17px; border-radius: 12px; cursor: pointer; }
+    .text-btn { color: var(--muted); border: 1px solid var(--line); background: transparent; }
+    .done-btn { color: white; border: 0; background: var(--wine); }
+    .toast { position: fixed; left: 50%; bottom: 28px; z-index: 30; transform: translate(-50%, 18px); padding: 11px 17px; border-radius: 999px; color: var(--night); background: var(--ink); font-size: 12px; opacity: 0; pointer-events: none; transition: .2s ease; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 850px) {
+      .hero { padding-top: 52px; }
+      .hero-orbit { right: -110px; opacity: .7; }
+      .workspace { grid-template-columns: 1fr; }
+      .side { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .shell { width: min(100% - 24px, 1160px); }
+      .topbar { height: 66px; }
+      .age-note { display: none; }
+      .hero { padding: 42px 4px 34px; }
+      h1 { font-size: 43px; }
+      .game-tabs { width: 100%; }
+      .tab { flex: 1; padding-inline: 8px; font-size: 13px; }
+      .main-card { padding: 22px 16px; border-radius: 20px; }
+      .card-head { margin-bottom: 23px; }
+      .secure { display: none; }
+      .pick { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 7px; padding: 13px 9px; }
+      .balls { gap: 5px; }
+      .ball { width: 33px; height: 33px; font-size: 12px; }
+      .icon-btn.copy-btn { display: none; }
+      .generate-row { align-items: stretch; flex-direction: column; }
+      .count-note { text-align: left; }
+      .side { grid-template-columns: 1fr; }
+      .number-grid { grid-template-columns: repeat(7, 1fr); gap: 7px; }
+      footer { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+        <span><strong>好運選號</strong><small>LUCKY NUMBER PICKER</small></span>
+    </div>
+    <div class="age-note">私人使用 · 資料只留在這台裝置</div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <span class="eyebrow">今天想玩哪一種？</span>
+      <h1>一鍵選好，<br>看看今天的手氣。</h1>
+      <p>威力彩、大樂透、今彩 539 都準備好了。選好遊戲和組數，剩下的交給隨機。</p>
+      <div class="hero-orbit" aria-hidden="true"></div>
+    </section>
+
+    <nav class="game-tabs" aria-label="彩券種類">
+      <button class="tab" data-game="power" aria-selected="true">威力彩</button>
+      <button class="tab" data-game="lotto" aria-selected="false">大樂透</button>
+      <button class="tab" data-game="daily" aria-selected="false">今彩 539</button>
+    </nav>
+
+    <section class="workspace">
+      <article class="card main-card">
+        <div class="card-head">
+          <div>
+            <h2 id="game-title">威力彩</h2>
+            <p id="game-rule">第一區 01–38 選 6 個，第二區 01–08 選 1 個</p>
+          </div>
+          <div class="secure"><span class="secure-dot"></span>安全隨機選取</div>
+        </div>
+
+        <div class="results" id="results" aria-live="polite"></div>
+
+        <div class="generate-row">
+          <button class="generate" id="generate">替我選號</button>
+          <div class="count-note" id="preference-note">尚未設定偏好</div>
+        </div>
+      </article>
+
+      <aside class="side">
+        <section class="card setting-card">
+          <h3>本次設定</h3>
+          <div class="setting">
+            <div class="setting-label"><span>產生組數</span><span>最多 10 組</span></div>
+            <div class="stepper">
+              <button id="minus" aria-label="減少一組">−</button>
+              <output id="group-count">3</output>
+              <button id="plus" aria-label="增加一組">＋</button>
+            </div>
+          </div>
+          <div class="setting">
+            <div class="setting-label"><span>號碼偏好</span><span id="preference-summary">自由隨機</span></div>
+            <button class="preference-btn" id="open-preferences"><span>鎖定／排除號碼</span><span>設定 →</span></button>
+            <p class="tip">鎖定的號碼每組都會出現；排除的號碼不會被選中。偏好只作用於主要選號區。</p>
+          </div>
+        </section>
+
+        <section class="card saved-card">
+          <h3>我的收藏</h3>
+          <div id="saved-list"><p class="saved-empty">看到喜歡的組合，點一下星星。<br>收藏會安靜地留在這台裝置。</p></div>
+        </section>
+      </aside>
+    </section>
+
+    <footer>
+      <span>此工具與台灣彩券無關，僅供隨機選號與娛樂使用，無法提高中獎機率。</span>
+      <span>未滿 18 歲不得購買或兌領彩券 · 請理性投注</span>
+    </footer>
+  </main>
+
+  <div class="modal-backdrop" id="preference-modal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-head">
+        <div>
+          <h3 id="modal-title">號碼偏好</h3>
+          <p>點一下鎖定，再點一下排除，第三下恢復自由隨機。</p>
+        </div>
+        <button class="icon-btn" id="close-modal" aria-label="關閉">×</button>
+      </div>
+      <div class="number-grid" id="number-grid"></div>
+      <div class="legend">
+        <span><i></i>自由隨機</span><span><i class="lock"></i>鎖定</span><span><i class="exclude"></i>排除</span>
+      </div>
+      <div class="modal-actions">
+        <button class="text-btn" id="reset-preferences">全部清除</button>
+        <button class="done-btn" id="save-preferences">完成設定</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const games = {
+      power: { name: "威力彩", max: 38, count: 6, extraMax: 8, rule: "第一區 01–38 選 6 個，第二區 01–08 選 1 個" },
+      lotto: { name: "大樂透", max: 49, count: 6, rule: "01–49 選 6 個號碼" },
+      daily: { name: "今彩 539", max: 39, count: 5, rule: "01–39 選 5 個號碼" }
+    };
+
+    const state = {
+      game: "power",
+      groups: 3,
+      results: [],
+      preferences: {
+        power: { locked: [], excluded: [] },
+        lotto: { locked: [], excluded: [] },
+        daily: { locked: [], excluded: [] }
+      },
+      saved: JSON.parse(localStorage.getItem("camellia-saved-picks") || "[]")
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const pad = (number) => String(number).padStart(2, "0");
+
+    function secureInteger(max) {
+      const range = 0x100000000;
+      const limit = range - (range % max);
+      const buffer = new Uint32Array(1);
+      do { crypto.getRandomValues(buffer); } while (buffer[0] >= limit);
+      return (buffer[0] % max) + 1;
+    }
+
+    function pickUnique(max, count, locked, excluded) {
+      const chosen = [...locked];
+      const blocked = new Set([...excluded, ...locked]);
+      while (chosen.length < count) {
+        const value = secureInteger(max);
+        if (!blocked.has(value)) {
+          blocked.add(value);
+          chosen.push(value);
+        }
+      }
+      return chosen.sort((a, b) => a - b);
+    }
+
+    function buildPick() {
+      const game = games[state.game];
+      const pref = state.preferences[state.game];
+      return {
+        id: `${Date.now()}-${Math.random()}`,
+        game: state.game,
+        main: pickUnique(game.max, game.count, pref.locked, pref.excluded),
+        extra: game.extraMax ? secureInteger(game.extraMax) : null
+      };
+    }
+
+    function generate() {
+      try {
+        state.results = Array.from({ length: state.groups }, buildPick);
+        renderResults();
+      } catch {
+        showToast("偏好設定留下的號碼不夠，請調整排除項目");
+      }
+    }
+
+    function renderResults() {
+      const target = $("#results");
+      target.innerHTML = state.results.map((pick, index) => {
+        const isSaved = state.saved.some(item => samePick(item, pick));
+        const balls = pick.main.map(number => `<span class="ball">${pad(number)}</span>`).join("");
+        const extra = pick.extra ? `<span class="divider"></span><span class="ball extra">${pad(pick.extra)}</span>` : "";
+        return `<div class="pick" style="animation-delay:${index * 45}ms">
+          <span class="pick-index">${pad(index + 1)}</span>
+          <div class="balls">${balls}${extra}</div>
+          <div class="pick-actions">
+            <button class="icon-btn copy-btn" data-copy="${pick.id}" aria-label="複製這組號碼">⧉</button>
+            <button class="icon-btn ${isSaved ? "saved" : ""}" data-save="${pick.id}" aria-label="收藏這組號碼">${isSaved ? "★" : "☆"}</button>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    function samePick(a, b) {
+      return a.game === b.game && a.extra === b.extra && a.main.join(",") === b.main.join(",");
+    }
+
+    function pickText(pick) {
+      const first = pick.main.map(pad).join("、");
+      return pick.extra ? `${games[pick.game].name}｜${first}｜第二區 ${pad(pick.extra)}` : `${games[pick.game].name}｜${first}`;
+    }
+
+    function renderSaved() {
+      const target = $("#saved-list");
+      if (!state.saved.length) {
+        target.innerHTML = `<p class="saved-empty">看到喜歡的組合，點一下星星。<br>收藏會安靜地留在這台裝置。</p>`;
+        return;
+      }
+      target.innerHTML = state.saved.slice(0, 5).map((pick, index) => `
+        <div class="saved-item">
+          <div>
+            <span class="saved-game">${games[pick.game].name}</span>
+            <div class="saved-mini">
+              ${pick.main.map(n => `<b>${pad(n)}</b>`).join("")}
+              ${pick.extra ? `<span class="saved-divider">｜</span><b class="extra" title="第二區">${pad(pick.extra)}</b>` : ""}
+            </div>
+          </div>
+          <button class="icon-btn" data-remove="${index}" aria-label="移除收藏">×</button>
+        </div>`).join("");
+    }
+
+    function updatePreferenceSummary() {
+      const pref = state.preferences[state.game];
+      const parts = [];
+      if (pref.locked.length) parts.push(`鎖定 ${pref.locked.length}`);
+      if (pref.excluded.length) parts.push(`排除 ${pref.excluded.length}`);
+      const summary = parts.join(" · ") || "自由隨機";
+      $("#preference-summary").textContent = summary;
+      $("#preference-note").textContent = parts.length ? summary : "尚未設定偏好";
+    }
+
+    function switchGame(gameKey) {
+      state.game = gameKey;
+      document.querySelectorAll(".tab").forEach(tab => tab.setAttribute("aria-selected", tab.dataset.game === gameKey));
+      $("#game-title").textContent = games[gameKey].name;
+      $("#game-rule").textContent = games[gameKey].rule;
+      updatePreferenceSummary();
+      generate();
+    }
+
+    function renderPreferenceGrid() {
+      const game = games[state.game];
+      const pref = state.preferences[state.game];
+      $("#number-grid").innerHTML = Array.from({ length: game.max }, (_, i) => i + 1).map(number => {
+        const status = pref.locked.includes(number) ? "locked" : pref.excluded.includes(number) ? "excluded" : "free";
+        return `<button class="choice-number" data-number="${number}" data-state="${status}" aria-label="號碼 ${pad(number)}，${status}">${pad(number)}</button>`;
+      }).join("");
+    }
+
+    function cyclePreference(number) {
+      const pref = state.preferences[state.game];
+      const game = games[state.game];
+      if (pref.locked.includes(number)) {
+        pref.locked = pref.locked.filter(n => n !== number);
+        pref.excluded.push(number);
+      } else if (pref.excluded.includes(number)) {
+        pref.excluded = pref.excluded.filter(n => n !== number);
+      } else if (pref.locked.length < game.count) {
+        pref.locked.push(number);
+      } else {
+        showToast(`最多鎖定 ${game.count} 個號碼`);
+      }
+      pref.locked.sort((a,b) => a-b);
+      pref.excluded.sort((a,b) => a-b);
+      renderPreferenceGrid();
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = $("#toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => switchGame(tab.dataset.game)));
+    $("#generate").addEventListener("click", generate);
+    $("#minus").addEventListener("click", () => { state.groups = Math.max(1, state.groups - 1); $("#group-count").textContent = state.groups; generate(); });
+    $("#plus").addEventListener("click", () => { state.groups = Math.min(10, state.groups + 1); $("#group-count").textContent = state.groups; generate(); });
+
+    $("#results").addEventListener("click", async (event) => {
+      const copyId = event.target.dataset.copy;
+      const saveId = event.target.dataset.save;
+      if (copyId) {
+        const pick = state.results.find(item => item.id === copyId);
+        try { await navigator.clipboard.writeText(pickText(pick)); showToast("號碼已複製"); }
+        catch { showToast("這個預覽環境暫時無法複製"); }
+      }
+      if (saveId) {
+        const pick = state.results.find(item => item.id === saveId);
+        const existing = state.saved.findIndex(item => samePick(item, pick));
+        if (existing >= 0) state.saved.splice(existing, 1);
+        else state.saved.unshift({ game: pick.game, main: pick.main, extra: pick.extra });
+        localStorage.setItem("camellia-saved-picks", JSON.stringify(state.saved));
+        renderResults();
+        renderSaved();
+        showToast(existing >= 0 ? "已取消收藏" : "已收藏這組號碼");
+      }
+    });
+
+    $("#saved-list").addEventListener("click", (event) => {
+      if (event.target.dataset.remove !== undefined) {
+        state.saved.splice(Number(event.target.dataset.remove), 1);
+        localStorage.setItem("camellia-saved-picks", JSON.stringify(state.saved));
+        renderSaved();
+        renderResults();
+      }
+    });
+
+    $("#open-preferences").addEventListener("click", () => { renderPreferenceGrid(); $("#preference-modal").hidden = false; });
+    $("#close-modal").addEventListener("click", () => $("#preference-modal").hidden = true);
+    $("#save-preferences").addEventListener("click", () => { $("#preference-modal").hidden = true; updatePreferenceSummary(); generate(); });
+    $("#reset-preferences").addEventListener("click", () => { state.preferences[state.game] = { locked: [], excluded: [] }; renderPreferenceGrid(); });
+    $("#number-grid").addEventListener("click", event => { if (event.target.dataset.number) cyclePreference(Number(event.target.dataset.number)); });
+    $("#preference-modal").addEventListener("click", event => { if (event.target.id === "preference-modal") $("#preference-modal").hidden = true; });
+    document.addEventListener("keydown", event => { if (event.key === "Escape") $("#preference-modal").hidden = true; });
+
+    renderSaved();
+    updatePreferenceSummary();
+    generate();
+  </script>
+</body>
+</html>
